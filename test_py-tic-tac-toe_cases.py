@@ -36,100 +36,138 @@ from unittest.mock import patch, MagicMock
 
 from tic_tac_toe import TicTacToe
 
-@pytest.fixture
-def game():
-    return TicTacToe()
+class _WidgetMock:
+    def __init__(self, *args, **kwargs):
+        pass
 
-def test_create_board(game):
+def test_create_board():
+    game = TicTacToe()
     game.create_board()
     assert game.board == [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
 
-def test_get_random_first_player(game):
+def test_get_random_first_player():
+    game = TicTacToe()
     player_choice = game.get_random_first_player()
     assert player_choice in [0, 1]
 
-def test_fix_spot(game):
+def test_fix_spot():
+    game = TicTacToe()
     game.create_board()
     game.fix_spot(0, 0, 'X')
     assert game.board[0][0] == 'X'
+    game.fix_spot(1, 2, 'O')
+    assert game.board[1][2] == 'O'
 
-def test_has_player_won_row(game):
+def test_has_player_won_row():
+    game = TicTacToe()
     game.create_board()
     game.fix_spot(0, 0, 'X')
     game.fix_spot(0, 1, 'X')
     game.fix_spot(0, 2, 'X')
     assert game.has_player_won('X') is True
 
-def test_has_player_won_col(game):
+def test_has_player_won_column():
+    game = TicTacToe()
     game.create_board()
-    game.fix_spot(0, 0, 'O')
-    game.fix_spot(1, 0, 'O')
-    game.fix_spot(2, 0, 'O')
+    game.fix_spot(0, 1, 'O')
+    game.fix_spot(1, 1, 'O')
+    game.fix_spot(2, 1, 'O')
     assert game.has_player_won('O') is True
 
-def test_has_player_won_diag1(game):
+def test_has_player_won_diagonal_main():
+    game = TicTacToe()
     game.create_board()
     game.fix_spot(0, 0, 'X')
     game.fix_spot(1, 1, 'X')
     game.fix_spot(2, 2, 'X')
     assert game.has_player_won('X') is True
 
-def test_has_player_won_diag2(game):
+def test_has_player_won_diagonal_anti():
+    game = TicTacToe()
     game.create_board()
     game.fix_spot(0, 2, 'O')
     game.fix_spot(1, 1, 'O')
     game.fix_spot(2, 0, 'O')
     assert game.has_player_won('O') is True
 
-def test_has_player_won_no_win(game):
+def test_has_player_won_no_win():
+    game = TicTacToe()
     game.create_board()
     game.fix_spot(0, 0, 'X')
-    game.fix_spot(0, 1, 'O')
-    game.fix_spot(0, 2, '-')
+    game.fix_spot(1, 1, 'O')
     assert game.has_player_won('X') is False
     assert game.has_player_won('O') is False
 
-def test_is_board_filled_true(game):
+def test_is_board_filled_true():
+    game = TicTacToe()
     game.board = [['X', 'O', 'X'], ['O', 'X', 'O'], ['O', 'X', 'O']]
     assert game.is_board_filled() is True
 
-def test_is_board_filled_false(game):
-    game.create_board()
+def test_is_board_filled_false():
+    game = TicTacToe()
+    game.board = [['X', 'O', '-'], ['O', 'X', 'O'], ['O', 'X', 'O']]
     assert game.is_board_filled() is False
 
-def test_swap_player_turn_x_to_o(game):
+def test_swap_player_turn():
+    game = TicTacToe()
     assert game.swap_player_turn('X') == 'O'
-
-def test_swap_player_turn_o_to_x(game):
     assert game.swap_player_turn('O') == 'X'
 
 @patch('builtins.input', side_effect=['1 1', '1 2', '1 3', '2 1', '2 2', '2 3', '3 1', '3 2', '3 3'])
-@patch('builtins.print')
-def test_start_game_draw(mock_print, mock_input):
+@patch('random.randint', return_value=1)
+def test_start_player_x_wins(mock_randint, mock_input):
     game = TicTacToe()
-    game.start()
-    assert "Match Draw!" in "".join(str(call.args[0]) for call in mock_print.call_args_list)
+    with patch('builtins.print') as mock_print:
+        game.start()
+        mock_print.assert_any_call('Player X wins the game!')
 
-@patch('builtins.input', side_effect=['1 1', '2 1', '1 2', '2 2', '1 3'])
-@patch('builtins.print')
-def test_start_game_win_x(mock_print, mock_input):
+@patch('builtins.input', side_effect=['1 1', '1 2', '2 1', '2 2', '3 1', '3 2', '1 3', '2 3', '3 3'])
+@patch('random.randint', return_value=0)
+def test_start_player_o_wins(mock_randint, mock_input):
     game = TicTacToe()
-    game.start()
-    assert "Player X wins the game!" in "".join(str(call.args[0]) for call in mock_print.call_args_list)
+    with patch('builtins.print') as mock_print:
+        game.start()
+        mock_print.assert_any_call('Player O wins the game!')
 
-@patch('builtins.input', side_effect=['1 1', '2 1', '1 2', '2 2', '3 3', '1 3', '2 3'])
-@patch('builtins.print')
-def test_start_game_win_o(mock_print, mock_input):
+@patch('builtins.input', side_effect=['1 1', '2 2', '1 2', '1 3', '3 1', '2 1', '3 2', '2 3', '3 3'])
+@patch('random.randint', return_value=1)
+def test_start_draw(mock_randint, mock_input):
     game = TicTacToe()
-    game.start()
-    assert "Player O wins the game!" in "".join(str(call.args[0]) for call in mock_print.call_args_list)
+    with patch('builtins.print') as mock_print:
+        game.start()
+        mock_print.assert_any_call('Match Draw!')
 
-@patch('builtins.input', side_effect=['1 1', '1 1', '1 2'])
-@patch('builtins.print')
-def test_start_game_invalid_move(mock_print, mock_input):
+@patch('builtins.input', side_effect=['invalid input', '1 1', '1 2', '1 3', '2 1', '2 2', '2 3', '3 1', '3 2', '3 3'])
+@patch('random.randint', return_value=1)
+def test_start_invalid_input_value_error(mock_randint, mock_input):
     game = TicTacToe()
-    game.start()
-    assert "Invalid spot. Try again!" in "".join(str(call.args[0]) for call in mock_print.call_args_list)
+    with patch('builtins.print') as mock_print:
+        game.start()
+        mock_print.assert_any_call("invalid literal for int() with base 10: 'invalid'")
+
+@patch('builtins.input', side_effect=['1 1', '1 1', '1 2', '1 3', '2 1', '2 2', '2 3', '3 1', '3 2', '3 3'])
+@patch('random.randint', return_value=1)
+def test_start_invalid_spot_already_taken(mock_randint, mock_input):
+    game = TicTacToe()
+    with patch('builtins.print') as mock_print:
+        game.start()
+        mock_print.assert_any_call('Invalid spot. Try again!')
+
+@patch('builtins.input', side_effect=['0 0', '1 1', '1 2', '1 3', '2 1', '2 2', '2 3', '3 1', '3 2', '3 3'])
+@patch('random.randint', return_value=1)
+def test_start_invalid_spot_out_of_bounds_row(mock_randint, mock_input):
+    game = TicTacToe()
+    with patch('builtins.print') as mock_print:
+        game.start()
+        mock_print.assert_any_call('Invalid spot. Try again!')
+
+@patch('builtins.input', side_effect=['1 0', '1 1', '1 2', '1 3', '2 1', '2 2', '2 3', '3 1', '3 2', '3 3'])
+@patch('random.randint', return_value=1)
+def test_start_invalid_spot_out_of_bounds_col(mock_randint, mock_input):
+    game = TicTacToe()
+    with patch('builtins.print') as mock_print:
+        game.start()
+        mock_print.assert_any_call('Invalid spot. Try again!')
 
 if __name__ == "__main__":
     import pytest, sys
