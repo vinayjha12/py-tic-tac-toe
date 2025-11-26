@@ -7,7 +7,6 @@ Description: A console based Tic Tac Toe game
 
 import random
 
-
 class TicTacToe:
 
     def __init__(self):
